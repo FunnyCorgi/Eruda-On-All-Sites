@@ -1,14 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eruda on all Sites</title>
 </head>
 <body>
     <script src="index.js" type="module"></script>
-    <button onclick="import { testInterpretGooglePage } from './index.js'; testInterpretGooglePage();">Click</button>
-    <!-- <script>
-        import { testInterpretGooglePage } from './index.js';
-        testInterpretGooglePage();
-    </script> -->
+    <button id="actionButton">Click</button>
+
+    <script>
+        document.getElementById('actionButton').addEventListener('click', async () => {
+            const { testInterpretGooglePage } = await import('./index.js');
+            testInterpretGooglePage();
+        });
+    </script>
 </body>
 </html>

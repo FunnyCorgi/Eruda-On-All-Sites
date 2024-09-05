@@ -1,18 +1,18 @@
 async function testInterpretGooglePage() {
     try {
-        // Attempt to fetch google.com as HTML
-        const response = await fetch("https://google.com");
+        // Example of a CORS-friendly request (placeholder API)
+        const response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
         
         // Check if the request was successful
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
         
-        // Get the response text
-        const text = await response.text();
+        // Get the response JSON
+        const data = await response.json();
         
-        // Alert the response text (or handle it as needed)
-        alert(text);
+        // Alert or handle the response data
+        alert(JSON.stringify(data));
     } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
     }
