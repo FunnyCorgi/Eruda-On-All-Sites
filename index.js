@@ -1,7 +1,7 @@
 async function testInterpretGooglePage() {
     try {
         // Example of a CORS-friendly request (placeholder API)
-        const response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
+        const response = await fetch("https://google.com");
         
         // Check if the request was successful
         if (!response.ok) {
@@ -9,7 +9,7 @@ async function testInterpretGooglePage() {
         }
         
         // Get the response JSON
-        const data = await response.json();
+        const data = response.body;
         
         // Alert or handle the response data
         alert(JSON.stringify(data));
