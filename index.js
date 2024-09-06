@@ -1,20 +1,10 @@
 async function testInterpretGooglePage() {
     try {
-        // Example of a CORS-friendly request (placeholder API)
-        const response = await fetch("https://google.com");
-        
-        // Check if the request was successful
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        
-        // Get the response JSON
-        const data = response.body;
-        
-        // Alert or handle the response data
-        alert(JSON.stringify(data));
+        const response = await fetch("https://google.com", { mode: 'no-cors' }); // `no-cors` won't let you see the response body
+        const text = await response.text();  // Use text() for non-JSON responses
+        alert(text);
     } catch (error) {
-        alert('There was a problem with the fetch operation:', error);
+        alert('There was a problem with the fetch operation: ' + error.message);
     }
 }
 
