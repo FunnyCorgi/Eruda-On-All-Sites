@@ -8,6 +8,15 @@ async function loadPage(url) {
         const iframe = document.getElementById('contentFrame');
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
+
+        // Inject Eruda into the iframe for debugging
+        const erudaScript = iframeDoc.createElement('script');
+        erudaScript.src = 'https://cdn.jsdelivr.net/npm/eruda';
+        erudaScript.onload = () => {
+            iframeDoc.defaultView.eruda.init();
+        };
+        iframeDoc.head.append(erudaScript);
+
         // Intercept all network requests and modify <a> link behavior before the page is written
         const customScript = `
             (function() {
@@ -75,20 +84,11 @@ async function loadPage(url) {
         iframeDoc.open();
         const scriptTag = iframeDoc.createElement('script');
         scriptTag.textContent = customScript;
-        iframeDoc.head.appendChild(scriptTag);
+        iframeDoc.head.append(scriptTag);
 
         // Write the fetched HTML content into the iframe
         iframeDoc.write(data.contents);
         iframeDoc.close();
-
-        // Inject Eruda into the iframe for debugging
-        const erudaScript = iframeDoc.createElement('script');
-        erudaScript.src = 'https://cdn.jsdelivr.net/npm/eruda';
-        erudaScript.onload = () => {
-            iframeDoc.defaultView.eruda.init();
-        };
-        iframeDoc.head.appendChild(erudaScript);
-
     } catch (error) {
         console.error('There was a problem with the fetch operation: ' + error.message);
     }
