@@ -14,7 +14,7 @@ async function testInterpretGooglePage() {
         // Alert or handle the response data
         alert(JSON.stringify(data));
     } catch (error) {
-        console.error('There was a problem with the fetch operation:', error);
+        alert('There was a problem with the fetch operation:', error);
     }
 }
 
