@@ -84,7 +84,7 @@ async function loadPage(url) {
         iframeDoc.open();
         const scriptTag = iframeDoc.createElement('script');
         scriptTag.textContent = customScript;
-        iframeDoc.head.append(scriptTag);
+        iframeDoc.head.appendChild(scriptTag);
 
         // Write the fetched HTML content into the iframe
         iframeDoc.write(data.contents);
