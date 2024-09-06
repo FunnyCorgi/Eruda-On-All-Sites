@@ -10,8 +10,8 @@
     <button id="actionButton">Click</button>
 
     <script>
+        import { testInterpretGooglePage } from "./index.js";
         document.getElementById('actionButton').addEventListener('click', async () => {
-            const { testInterpretGooglePage } = await import('./index.js');
             testInterpretGooglePage();
         });
     </script>
