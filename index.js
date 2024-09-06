@@ -15,7 +15,7 @@ async function loadPage(url) {
         erudaScript.onload = () => {
             iframeDoc.defaultView.eruda.init();
         };
-        iframeDoc.head.append(erudaScript);
+        iframeDoc.head.appendChild(erudaScript);
 
         // Intercept all network requests and modify <a> link behavior before the page is written
         const customScript = `
