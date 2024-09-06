@@ -6,13 +6,13 @@
     <title>Eruda on all Sites</title>
 </head>
 <body>
-    <script src="index.js" type="module"></script>
     <button id="actionButton">Click</button>
+    <pre id="contentDisplay" style="white-space: pre-wrap; word-wrap: break-word;"></pre>
 
     <script type="module">
         import { testInterpretGooglePage } from "./index.js";
         document.getElementById('actionButton').addEventListener('click', async () => {
-            testInterpretGooglePage();
+            await testInterpretGooglePage();
         });
     </script>
 </body>
