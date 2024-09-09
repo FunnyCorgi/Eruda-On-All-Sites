@@ -15,65 +15,50 @@
 
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>
-        if (window.location.href.includes("?inDev=true")) {
+        if (window.location.href.includes("?inDev=true")){
             eruda.init();
         }
     </script>
     <script>
-        function goFullScreen() {
+        function goFullScreen(){
             document.getElementById("output").requestFullscreen().then(function() {
-                // Entered full screen
-            }).catch(function(error) {
-                console.log(error.message); // Log error if it occurs
-            });
-        }
+                //entered full screen
+            }).catch(function(error) {console.log(error.message);})}//error must have happened, log to console
+        function getAndLoadPage () {
+          var url = document.getElementById('url');
 
-        function getAndLoadPage() {
-            var url = document.getElementById('url').value;
+          var xmlhttp = new XMLHttpRequest();
 
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    var response = JSON.parse(this.responseText);
-                    var htmlContent = response.contents; // Extract HTML content from JSON
-                    updatePreview(htmlContent);
-                }
-            };
+          xmlhttp.onreadystatechange = function () {
+              if (this.readyState == 4 && this.status == 200) {
+                  var myArr = JSON.parse(this.responseText);
+                  updatePreview(myArr);
+              }
+          };
 
-            xmlhttp.open('GET', document.location.protocol + '//api.allorigins.win/get?url=' + encodeURIComponent(url));
-            xmlhttp.send();
+          xmlhttp.open('GET', document.location.protocol + '//api.allorigins.win/get?url='+escape(url.value, true));
+          xmlhttp.send();
 
-            function updatePreview(htmlContent) {
-                var iframe = document.getElementById('output');
-                var doc = iframe.contentDocument || iframe.contentWindow.document;
 
-                doc.open();
-                doc.write(htmlContent);
-                doc.close();
+          function updatePreview (data) {
+            var iframe = document.getElementById('output');
+            var doc = iframe.document;
 
-                // Add event listener to handle link clicks
-                doc.addEventListener('click', function(event) {
-                    if (event.target.tagName === 'A' && event.target.href) {
-                        event.preventDefault(); // Prevent the default link behavior
-                        handleLinkClick(event.target.href); // Call parent function
-                    }
-                });
-
-                var erudaScript = doc.createElement('script');
-                erudaScript.src = 'https://cdn.jsdelivr.net/npm/eruda';
-                erudaScript.onload = () => {
-                    doc.defaultView.eruda.init();
-                };
-                doc.body.appendChild(erudaScript);
+            if(iframe.contentDocument) {
+              doc = iframe.contentDocument;
+            } else if(iframe.contentWindow) {
+              doc = iframe.contentWindow.document;
             }
-
-            return false;
-        }
-
-        function handleLinkClick(href) {
-            // Update the URL input and load the new page
-            document.getElementById('url').value = href;
-            getAndLoadPage(); // Reload the page using the new URL
+            doc.open();
+            doc.writeln(data.contents);
+            doc.close();
+            var erudaScript = doc.createElement('script');
+            erudaScript.src = 'https://cdn.jsdelivr.net/npm/eruda';
+            erudaScript.onload = () => {
+                doc.defaultView.eruda.init();
+            }
+          }
+          return false;
         }
     </script>
 </body>
