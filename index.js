@@ -26,9 +26,14 @@ async function loadPage(url) {
                         const originalFetch = window.fetch;
                         const originalXhrOpen = XMLHttpRequest.prototype.open;
 
+                        // Helper function to check if the URL is already proxied
+                        function isProxied(url) {
+                            return url.startsWith(allOriginsUrl);
+                        }
+
                         // Intercept fetch requests
                         window.fetch = async function(url, ...args) {
-                            if (url.startsWith('http')) {
+                            if (url.startsWith('http') && !isProxied(url)) {
                                 url = allOriginsUrl + encodeURIComponent(url);
                             }
                             return originalFetch(url, ...args);
@@ -36,22 +41,26 @@ async function loadPage(url) {
 
                         // Intercept XMLHttpRequest requests
                         XMLHttpRequest.prototype.open = function(method, url, ...args) {
-                            if (url.startsWith('http')) {
+                            if (url.startsWith('http') && !isProxied(url)) {
                                 url = allOriginsUrl + encodeURIComponent(url);
                             }
                             originalXhrOpen.call(this, method, url, ...args);
                         };
 
-                        // Function to fetch image data and replace src with actual data URL
+                        // Function to fetch image data and replace src with Blob URL
                         async function replaceImageSource(imgEl) {
                             const originalUrl = imgEl.src;
+                            if (isProxied(originalUrl)) return; // Skip already proxied images
+
                             try {
                                 const allOriginsImageUrl = allOriginsUrl + encodeURIComponent(originalUrl);
                                 const imageResponse = await fetch(allOriginsImageUrl);
-                                const imageData = await imageResponse.json();
-
-                                const base64Data = btoa(imageData.contents);  // Convert to base64
-                                imgEl.src = 'data:image/jpeg;base64,' + base64Data;  // Update src with base64 image data
+                                
+                                const imageData = await imageResponse.blob();  // Use blob for binary content
+                                
+                                const blobUrl = URL.createObjectURL(imageData);
+                                
+                                imgEl.src = blobUrl;  // Update src with Blob URL
                             } catch (error) {
                                 console.error('Error fetching image: ', error);
                             }
@@ -61,15 +70,15 @@ async function loadPage(url) {
                         async function interceptResourceTags() {
                             const imgElements = document.querySelectorAll('img');
                             for (const imgEl of imgElements) {
-                                if (imgEl.src.startsWith('http')) {
+                                if (imgEl.src.startsWith('http') && !isProxied(imgEl.src)) {
                                     await replaceImageSource(imgEl);
                                 }
                             }
 
                             document.querySelectorAll('script, link').forEach(el => {
-                                if (el.tagName.toLowerCase() === 'script' && el.src.startsWith('http')) {
+                                if (el.tagName.toLowerCase() === 'script' && el.src.startsWith('http') && !isProxied(el.src)) {
                                     el.src = allOriginsUrl + encodeURIComponent(el.src);
-                                } else if (el.tagName.toLowerCase() === 'link' && el.href.startsWith('http')) {
+                                } else if (el.tagName.toLowerCase() === 'link' && el.href.startsWith('http') && !isProxied(el.href)) {
                                     el.href = allOriginsUrl + encodeURIComponent(el.href);
                                 }
                             });
@@ -78,7 +87,7 @@ async function loadPage(url) {
                         // Intercept <a> links to ensure proxy routing
                         function interceptLinks() {
                             document.querySelectorAll('a').forEach(el => {
-                                if (el.href && el.href.startsWith('http')) {
+                                if (el.href && el.href.startsWith('http') && !isProxied(el.href)) {
                                     const originalHref = el.href;
                                     el.removeAttribute('href');
                                     el.setAttribute('onclick', 'parent.handleLinkClick("' + originalHref + '")');
