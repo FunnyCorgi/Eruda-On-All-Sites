@@ -6,16 +6,51 @@
     <title>Eruda on all Sites</title>
 </head>
 <body>
-    <button id="actionButton">Load Page</button>
-    <iframe id="contentFrame" style="width: 100%; height: 80vh; border: none;"></iframe> <!-- Added iframe -->
+    <!-- <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script> -->
+    <form onSubmit="return getAndLoadPage();">
+        <input class="input" type="text" id="url" value="https://github.com/" /><button>Load Page</button>
+    </form>
+    <br>
+    <iframe id="output" style="width: 100%; height: 100%; border: none;"></iframe>
 
-    <script type="module">
-        import { testInterpretGooglePage } from "./index.js";
-        document.getElementById('actionButton').addEventListener('click', async () => {
-            await testInterpretGooglePage();
-        });
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
+    <script>
+        if (window.location.href.includes("?inDev=true")){
+            eruda.init();
+        }
+    </script>
+    <script>
+        function getAndLoadPage () {
+          var url = document.getElementById('url');
+
+          var xmlhttp = new XMLHttpRequest();
+
+          xmlhttp.onreadystatechange = function () {
+              if (this.readyState == 4 && this.status == 200) {
+                  var myArr = JSON.parse(this.responseText);
+                  updatePreview(myArr);
+              }
+          };
+
+          xmlhttp.open('GET', document.location.protocol + '//api.allorigins.win/get?url='+escape(url.value, true));
+          xmlhttp.send();
+
+
+          function updatePreview (data) {
+            var iframe = document.getElementById('output');
+            var doc = iframe.document;
+
+            if(iframe.contentDocument) {
+              doc = iframe.contentDocument;
+            } else if(iframe.contentWindow) {
+              doc = iframe.contentWindow.document;
+            }
+            doc.open();
+            doc.writeln(data.contents);
+            doc.close();
+          }
+          return false;
+        }
+    </script>
 </body>
 </html>
