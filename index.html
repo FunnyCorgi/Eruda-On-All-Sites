@@ -9,7 +9,7 @@
     <!-- <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script> -->
     <form onSubmit="return getAndLoadPage();">
         <input class="input" type="text" id="url" value="https://github.com/" /><button>Load Page</button>
-    </form><button onclick="">Go Full Screen</button>
+    </form><button onclick="goFullScreen()">Go Full Screen</button>
     <br>
     <iframe id="output" style="width: 100%; height: 90vh; border: none;" allowfullscreen></iframe>
 
@@ -20,6 +20,10 @@
         }
     </script>
     <script>
+        function goFullScreen(){
+            document.getElementById("output").requestFullscreen().then(function() {
+                //entered full screen
+            }).catch(function(error) {console.log(error.message);})}//error must have happened, log to console
         function getAndLoadPage () {
           var url = document.getElementById('url');
 
@@ -48,7 +52,7 @@
             doc.open();
             doc.writeln(data.contents);
             doc.close();
-            const erudaScript = iframeDoc.createElement('script');
+            var erudaScript = doc.createElement('script');
             erudaScript.src = 'https://cdn.jsdelivr.net/npm/eruda';
             erudaScript.onload = () => {
                 doc.defaultView.eruda.init();
