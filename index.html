@@ -40,24 +40,88 @@
           xmlhttp.send();
 
 
-          function updatePreview (data) {
+        function updatePreview(data) {
             var iframe = document.getElementById('output');
             var doc = iframe.document;
-
-            if(iframe.contentDocument) {
-              doc = iframe.contentDocument;
-            } else if(iframe.contentWindow) {
-              doc = iframe.contentWindow.document;
+        
+            if (iframe.contentDocument) {
+                doc = iframe.contentDocument;
+            } else if (iframe.contentWindow) {
+                doc = iframe.contentWindow.document;
             }
+        
+            // Write the page contents into the iframe
             doc.open();
             doc.writeln(data.contents);
             doc.close();
+        
+            // Inject Eruda for debugging
             var erudaScript = doc.createElement('script');
             erudaScript.src = 'https://cdn.jsdelivr.net/npm/eruda';
             erudaScript.onload = () => {
                 doc.defaultView.eruda.init();
-            }
-          }
+            };
+        
+            // Intercept all links
+            const links = doc.querySelectorAll('a');
+            links.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault(); // Prevent the default link behavior
+                    var newUrl = link.href;
+                    document.getElementById('url').value = newUrl; // Update input field
+                    getAndLoadPage(); // Reload the page using your proxy
+                });
+            });
+        
+            // Handle images, scripts, and styles
+            const baseUrl = new URL(document.getElementById('url').value).origin;
+        
+            // Resolve resources: images, scripts, and stylesheets
+            const elementsToFix = doc.querySelectorAll('img, script, link[rel="stylesheet"]');
+            elementsToFix.forEach(el => {
+                let attribute = 'src'; // Default for images and scripts
+                if (el.tagName === 'LINK') {
+                    attribute = 'href'; // Stylesheets use `href`
+                }
+            
+                if (el[attribute]) {
+                    const originalUrl = el[attribute];
+                    const absoluteUrl = new URL(originalUrl, baseUrl).href;
+                
+                    // Fetch the resource through AllOrigins
+                    fetchProxiedResource(absoluteUrl, el, attribute);
+                }
+            });
+        }
+        
+        // Function to handle fetching the resource via AllOrigins and updating the element
+        function fetchProxiedResource(resourceUrl, element, attribute) {
+            const proxyUrl = document.location.protocol + '//api.allorigins.win/get?url=' + encodeURIComponent(resourceUrl);
+            fetch(proxyUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (element.tagName === 'IMG') {
+                        // For images, update the src to point to the proxied image URL
+                        const imageBlobUrl = URL.createObjectURL(data.contents);
+                        element.setAttribute(attribute, imageBlobUrl);
+                    } else if (element.tagName === 'SCRIPT') {
+                        // For scripts, create a new script element with the fetched content
+                        const scriptContent = data.contents;
+                        const script = document.createElement('script');
+                        script.textContent = scriptContent;
+                        element.replaceWith(script); // Replace the old script tag with the new one
+                    } else if (element.tagName === 'LINK' && element.rel === 'stylesheet') {
+                        // For stylesheets, inject the content into a <style> tag
+                        const styleContent = data.contents;
+                        const style = document.createElement('style');
+                        style.textContent = styleContent;
+                        element.replaceWith(style); // Replace the link tag with the new style
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching proxied resource:', err);
+                });
+        }
           return false;
         }
     </script>
