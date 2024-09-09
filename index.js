@@ -28,29 +28,44 @@ async function loadPage(url) {
 
                         // Intercept fetch requests
                         window.fetch = async function(url, ...args) {
-                            console.log('Intercepted fetch request:', url);
                             if (url.startsWith('http')) {
                                 url = allOriginsUrl + encodeURIComponent(url);
                             }
-                            const response = await originalFetch(url, ...args);
-                            return response;
+                            return originalFetch(url, ...args);
                         };
 
                         // Intercept XMLHttpRequest requests
                         XMLHttpRequest.prototype.open = function(method, url, ...args) {
-                            console.log('Intercepted XMLHttpRequest:', method, url);
                             if (url.startsWith('http')) {
                                 url = allOriginsUrl + encodeURIComponent(url);
                             }
                             originalXhrOpen.call(this, method, url, ...args);
                         };
 
-                        // Intercept and rewrite resource tags
-                        function interceptResourceTags() {
-                            document.querySelectorAll('img, script, link').forEach(el => {
-                                if (el.tagName.toLowerCase() === 'img' && el.src.startsWith('http')) {
-                                    el.src = allOriginsUrl + encodeURIComponent(el.src);
-                                } else if (el.tagName.toLowerCase() === 'script' && el.src.startsWith('http')) {
+                        // Function to fetch image data and replace src with actual data URL
+                        async function replaceImageSource(imgEl) {
+                            const originalUrl = imgEl.src;
+                            try {
+                                const allOriginsImageUrl = allOriginsUrl + encodeURIComponent(originalUrl);
+                                const imageResponse = await fetch(allOriginsImageUrl);
+                                const imageData = await imageResponse.json();
+                                imgEl.src = 'data:image/jpeg;base64,' + btoa(imageData.contents);
+                            } catch (error) {
+                                console.error('Error fetching image: ', error);
+                            }
+                        }
+
+                        // Rewrite image, script, and link resources
+                        async function interceptResourceTags() {
+                            const imgElements = document.querySelectorAll('img');
+                            for (const imgEl of imgElements) {
+                                if (imgEl.src.startsWith('http')) {
+                                    await replaceImageSource(imgEl);
+                                }
+                            }
+
+                            document.querySelectorAll('script, link').forEach(el => {
+                                if (el.tagName.toLowerCase() === 'script' && el.src.startsWith('http')) {
                                     el.src = allOriginsUrl + encodeURIComponent(el.src);
                                 } else if (el.tagName.toLowerCase() === 'link' && el.href.startsWith('http')) {
                                     el.href = allOriginsUrl + encodeURIComponent(el.href);
@@ -58,7 +73,7 @@ async function loadPage(url) {
                             });
                         }
 
-                        // Intercept <a> links
+                        // Intercept <a> links to ensure proxy routing
                         function interceptLinks() {
                             document.querySelectorAll('a').forEach(el => {
                                 if (el.href && el.href.startsWith('http')) {
@@ -90,7 +105,7 @@ async function loadPage(url) {
     }
 }
 
-// Function to handle link clicks and reload the iframe with the new URL
+// Function to handle link clicks and reload the iframe with the new URL through AllOrigins
 function handleLinkClick(newUrl) {
     loadPage(newUrl); // Reload the iframe with the new page via proxy
 }
