@@ -13,6 +13,8 @@ async function loadPage(url) {
 
         // Ensure the iframe is fully loaded before injecting Eruda
         iframeDoc.addEventListener('DOMContentLoaded', () => {
+            const baseUrl = new URL(url).origin; // Extract base URL (e.g., https://google.com)
+
             // Inject Eruda script
             const erudaScript = iframeDoc.createElement('script');
             erudaScript.src = 'https://cdn.jsdelivr.net/npm/eruda';
@@ -31,9 +33,18 @@ async function loadPage(url) {
                             return url.startsWith(allOriginsUrl);
                         }
 
+                        // Convert relative URLs to absolute
+                        function toAbsoluteUrl(relativeUrl) {
+                            if (relativeUrl.startsWith('http')) {
+                                return relativeUrl; // Already absolute
+                            }
+                            return new URL(relativeUrl, '${baseUrl}').href; // Convert to absolute URL
+                        }
+
                         // Intercept fetch requests
                         window.fetch = async function(url, ...args) {
-                            if (url.startsWith('http') && !isProxied(url)) {
+                            url = toAbsoluteUrl(url); // Convert to absolute URL
+                            if (!isProxied(url)) {
                                 url = allOriginsUrl + encodeURIComponent(url);
                             }
                             return originalFetch(url, ...args);
@@ -41,7 +52,8 @@ async function loadPage(url) {
 
                         // Intercept XMLHttpRequest requests
                         XMLHttpRequest.prototype.open = function(method, url, ...args) {
-                            if (url.startsWith('http') && !isProxied(url)) {
+                            url = toAbsoluteUrl(url); // Convert to absolute URL
+                            if (!isProxied(url)) {
                                 url = allOriginsUrl + encodeURIComponent(url);
                             }
                             originalXhrOpen.call(this, method, url, ...args);
@@ -49,7 +61,9 @@ async function loadPage(url) {
 
                         // Function to fetch image data and replace src with Blob URL
                         async function replaceImageSource(imgEl) {
-                            const originalUrl = imgEl.src;
+                            let originalUrl = imgEl.src;
+                            originalUrl = toAbsoluteUrl(originalUrl); // Ensure the URL is absolute
+
                             if (isProxied(originalUrl)) return; // Skip already proxied images
 
                             try {
@@ -77,9 +91,9 @@ async function loadPage(url) {
 
                             document.querySelectorAll('script, link').forEach(el => {
                                 if (el.tagName.toLowerCase() === 'script' && el.src.startsWith('http') && !isProxied(el.src)) {
-                                    el.src = allOriginsUrl + encodeURIComponent(el.src);
+                                    el.src = allOriginsUrl + encodeURIComponent(toAbsoluteUrl(el.src));
                                 } else if (el.tagName.toLowerCase() === 'link' && el.href.startsWith('http') && !isProxied(el.href)) {
-                                    el.href = allOriginsUrl + encodeURIComponent(el.href);
+                                    el.href = allOriginsUrl + encodeURIComponent(toAbsoluteUrl(el.href));
                                 }
                             });
                         }
@@ -90,7 +104,7 @@ async function loadPage(url) {
                                 if (el.href && el.href.startsWith('http') && !isProxied(el.href)) {
                                     const originalHref = el.href;
                                     el.removeAttribute('href');
-                                    el.setAttribute('onclick', 'parent.handleLinkClick("' + originalHref + '")');
+                                    el.setAttribute('onclick', 'parent.handleLinkClick("' + toAbsoluteUrl(originalHref) + '")');
                                 }
                             });
                         }
