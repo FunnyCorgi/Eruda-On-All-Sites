@@ -49,7 +49,9 @@ async function loadPage(url) {
                                 const allOriginsImageUrl = allOriginsUrl + encodeURIComponent(originalUrl);
                                 const imageResponse = await fetch(allOriginsImageUrl);
                                 const imageData = await imageResponse.json();
-                                imgEl.src = 'data:image/jpeg;base64,' + btoa(imageData.contents);
+
+                                const base64Data = btoa(imageData.contents);  // Convert to base64
+                                imgEl.src = 'data:image/jpeg;base64,' + base64Data;  // Update src with base64 image data
                             } catch (error) {
                                 console.error('Error fetching image: ', error);
                             }
