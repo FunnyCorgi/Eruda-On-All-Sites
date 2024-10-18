@@ -24,8 +24,8 @@
             document.getElementById("output").requestFullscreen().then(function() {
                 //entered full screen
             }).catch(function(error) {console.log(error.message);})}//error must have happened, log to console
-        function getAndLoadPage () {
-          var url = document.getElementById('url');
+        function getAndLoadPage (location="https://www.google.com") {
+          var url = location;
 
           var xmlhttp = new XMLHttpRequest();
 
@@ -100,17 +100,20 @@
             fetch(proxyUrl)
                 .then(response => response.json())
                 .then(data => {
-                    if (element.tagName === 'IMG') {
+                    if (element.tagName.toLowerCase() === 'img') {
                         // For images, update the src to point to the proxied image URL
                         const imageBlobUrl = URL.createObjectURL(data.contents);
-                        element.setAttribute(attribute, imageBlobUrl);
-                    } else if (element.tagName === 'SCRIPT') {
+                        element.setAttribute("src", imageBlobUrl);
+                    } else if (element.tagName.toLowerCase() === 'script') {
                         // For scripts, create a new script element with the fetched content
                         const scriptContent = data.contents;
                         const script = document.createElement('script');
                         script.textContent = scriptContent;
+                        if(element.type === "module"){
+                            script.setAtribute("type", "module")
+                        }
                         element.replaceWith(script); // Replace the old script tag with the new one
-                    } else if (element.tagName === 'LINK' && element.rel === 'stylesheet') {
+                    } else if (element.tagName.toLowerCase() === 'link' && element.rel === 'stylesheet') {
                         // For stylesheets, inject the content into a <style> tag
                         const styleContent = data.contents;
                         const style = document.createElement('style');
