@@ -36,7 +36,7 @@
               }
           };
 
-          xmlhttp.open('GET', document.location.protocol + '//api.allorigins.win/get?url='+escape(url.value, true));
+          xmlhttp.open('GET', document.location.protocol + '//api.allorigins.win/get?url='+escape(url, true));
           xmlhttp.send();
 
 
@@ -69,7 +69,7 @@
                     e.preventDefault(); // Prevent the default link behavior
                     var newUrl = link.href;
                     document.getElementById('url').value = newUrl; // Update input field
-                    getAndLoadPage(); // Reload the page using your proxy
+                    getAndLoadPage(newUrl); // Reload the page using proxy
                 });
             });
         
@@ -80,7 +80,7 @@
             const elementsToFix = doc.querySelectorAll('img, script, link[rel="stylesheet"]');
             elementsToFix.forEach(el => {
                 let attribute = 'src'; // Default for images and scripts
-                if (el.tagName === 'LINK') {
+                if (el.tagName.toLowerCase() === 'link') {
                     attribute = 'href'; // Stylesheets use `href`
                 }
             
